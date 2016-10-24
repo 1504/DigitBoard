@@ -1,5 +1,3 @@
-package org.usfirst.frc.team1504.robot;
-
 import edu.wpi.first.wpilibj.I2C;
 
 import edu.wpi.first.wpilibj.AnalogInput;
@@ -11,9 +9,9 @@ import edu.wpi.first.wpilibj.DigitalInput;
                         `/sdNNNNNNNNNNNNNNNNNNNNNNNds/`                         
                      .+hmhyssyhNNNNNNNNNNNNNNNNNNNNNNNNd+.                      
                    /hmo-        :sNNNNNNNNmdhyhhmNNNNNNNNNh/                    
-                `+dNh` .s+dh`     .dNmms:`       `-+dNNNNNmmd+`                 
-               /dmmh   -s/dd`      `mo`              :dmmmmmmmd/                
-             `ymmmm/     ``         ::s:+d.           :mmmmmmmmmy.              
+                `+dNh` .sSdhs     .dNmms:`       `-+dNNNNNmmd+`                 
+               /dmmh   -sSdd`      `mo`              :dmmmmmmmd/                
+             `ymmmm/     SSs         ::s:+d.           :mmmmmmmmmy.              
             -hddddd+                :hdoyM+           -ddddddddddd-             
 ``         :dddddddh.              -d++ys/           .ydddddddddddd:            
  /so/-    -hhhhhhhhhy:         `...:::-.....`     `:ohhhhhhhhhhhhhhh-           
@@ -45,8 +43,11 @@ import edu.wpi.first.wpilibj.DigitalInput;
  * 
  * 
  *This code is a free-to-use Java library for FRC Teams using the MXP Digit Board with their roboRIO.
- *The Digit Board runs in its own thread; it is always running.
+ *The Digit Board runs in its own thread; it starts automatically.
+ *About the button get functions - getButton will return when the button is pressed down, getButtonOnRisingEdge will return true when the button is released, getButtonLatch will toggle between true and false.
+ *The getPotentiometer function returns an integer cast as a double.
  */
+
 public class DigitBoard
 {
 	private static class Board_Task implements Runnable
@@ -78,9 +79,11 @@ public class DigitBoard
 	{
 		return DigitBoard.instance;
 	}
+	
+	
 	protected DigitBoard()
 	{
-		_task_thread = new Thread(new Board_Task(this), "1504_Display_Board");
+		_task_thread = new Thread(new Board_Task(this), "MXP_Display_Board");
 		_task_thread.setPriority((Thread.NORM_PRIORITY + Thread.MAX_PRIORITY) / 2);
 
 		DisplayInit();
@@ -89,6 +92,8 @@ public class DigitBoard
 
 		System.out.println("MXP Board Initialization Successful.");
 	}
+	
+
 	public void start()
 	{
 		if(_run)
@@ -97,6 +102,8 @@ public class DigitBoard
 		_task_thread = new Thread(new Board_Task(this));
 		_task_thread.start();
 	}
+	
+
 	public void stop()
 	{
 		_run = false;
@@ -105,6 +112,8 @@ public class DigitBoard
 	private I2C _display_board;
 	private DigitalInput _a;
 	private DigitalInput _b;
+	
+	
 	private static final int A_MASK = 0b0000000000000001;
 	private static final int B_MASK = 0b0000000000000010;
 	private volatile int _input_mask, _input_mask_rising, _input_mask_rising_last;
@@ -166,6 +175,8 @@ public class DigitBoard
 		_input_mask &= clear_mask;
 		return value;
 	}
+	
+
 	public boolean getA()
 	{
 		return(!_a.get());
@@ -178,6 +189,8 @@ public class DigitBoard
 	{
 		return getRawButtonOnRisingEdge(A_MASK);
 	}
+	
+
 	public boolean getB()
 	{
 		return(!_b.get());
@@ -194,12 +207,15 @@ public class DigitBoard
 	
 	/**
 	 * Returns the current value of the potentiometer
-	 * @return an integer between 3-400, corresponding to the position of the dial
+	 * @return an integer corresponding to the position of the dial
 	 */
-	public int getPotentiometer()
+	public double getPotentiometer()
 	{
-		int val =  _potentiometer.getAverageValue();//integer between 3 - 400
-		return val;
+		double val = (double) _potentiometer.getAverageValue();//integer between 400-3 (furthest CCW is 400, furthest CW is 3)
+		val = 1 - ((val-3)/397); //number between 0 and 1, with 0 being furthest CCW and 1 being furthest CW
+		val = Math.min(val, 1.0);
+		val = Math.max(0, val);
+		Math.
 	}
 
 	public void writeDigits(String output)
@@ -255,6 +271,8 @@ public class DigitBoard
 			update();
 		}
 	}
+	
+	
 	// Thanks @Team 1493
 	private static final byte[][] CHARS = 
 		{
