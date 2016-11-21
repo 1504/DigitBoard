@@ -1,3 +1,5 @@
+package org.usfirst.frc.team1504.robot;
+
 import edu.wpi.first.wpilibj.I2C;
 
 import edu.wpi.first.wpilibj.AnalogInput;
@@ -89,7 +91,6 @@ public class DigitBoard
 		DisplayInit();
 		
 		start();
-
 		System.out.println("MXP Board Initialization Successful.");
 	}
 	
@@ -113,6 +114,7 @@ public class DigitBoard
 	private DigitalInput _a;
 	private DigitalInput _b;
 	
+	byte[] _output_buffer;
 	
 	private static final int A_MASK = 0b0000000000000001;
 	private static final int B_MASK = 0b0000000000000010;
@@ -125,6 +127,8 @@ public class DigitBoard
 	{
 		_display_board = new I2C(I2C.Port.kMXP, 0x70);
 
+		_output_buffer = new byte[10];
+		
 		_a = new DigitalInput(19);
 		_b = new DigitalInput(20);
 		_potentiometer = new AnalogInput(7);
@@ -215,15 +219,14 @@ public class DigitBoard
 		val = 1 - ((val-3)/397); //number between 0 and 1, with 0 being furthest CCW and 1 being furthest CW
 		val = Math.min(val, 1.0);
 		val = Math.max(0, val);
-		Math.
+		return val;
 	}
 
 	public void writeDigits(String output)
 	{
 		output += "    "; // Cheap and easy way to clear and prevent index out of bounds errors
 		
-		byte[] output_buffer = new byte[10];
-		output_buffer[0] = (byte)(0b0000111100001111);
+		_output_buffer[0] = (byte)(0b0000111100001111);
 		
 		int offset = 0;
 		
@@ -236,17 +239,16 @@ public class DigitBoard
 				if(letter == '.')
 				{
 					if(i != 0)
-						output_buffer[(4-i)*2+3] |= (byte)0b01000000;
+						_output_buffer[(4-i)*2+3] |= (byte)0b01000000;
 				}
 				
 				offset++;
 				letter = output.charAt(i + offset);
 			}
-			output_buffer[(3-i)*2+2] = CHARS[letter-32][0];
-			output_buffer[(3-i)*2+3] = CHARS[letter-32][1];
+			_output_buffer[(3-i)*2+2] = CHARS[letter-32][0];
+			_output_buffer[(3-i)*2+3] = CHARS[letter-32][1];
 		}
 		
-		_display_board.writeBulk(output_buffer);
 	}
 	
 	
@@ -269,6 +271,17 @@ public class DigitBoard
 		while (_run)
 		{	
 			update();
+			_display_board.writeBulk(_output_buffer);
+			
+			try
+			{
+				Thread.sleep(40); // wait a while because people can't read that
+									// fast
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+
 		}
 	}
 	
