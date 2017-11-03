@@ -279,7 +279,7 @@ public class DigitBoard
 	}
 	
 	
-	// Thanks @Team 1493
+	// Adapted partially from Team 1493, the rest was done using regular expressions!
 	private static final byte[][] CHARS = 
 		{
 			{(byte)0b00000000, (byte)0b00000000}, //   
